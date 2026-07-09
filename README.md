@@ -1,28 +1,95 @@
-# Kasparro Agentic Content Generation System
+# ContentForge AI — Self-Correcting Multi-Agent Content Generation System
 
-A fully modular, deterministic, multi-agent content generation pipeline that converts a single product JSON into three machine-readable outputs: a Product Page, an FAQ Page, and a Comparison Page.
-Built with a strong focus on clean architecture, reproducibility, validation, and real engineering design.
+A production-style AI agent system that transforms structured product data into high-quality content using LangGraph-powered multi-agent orchestration.
+
+ContentForge AI combines specialized agents, validation gates, execution tracing, and targeted self-correction loops to generate reliable product pages, FAQs, and comparison content.
+
+Unlike traditional sequential pipelines, failed outputs are automatically routed back to the responsible agent for regeneration using LangGraph conditional workflows.
 
 ## 🚀 Overview
 
-This project implements a production-grade content generation system where each agent performs a single responsibility, similar to how micro-components operate inside real-world AI pipelines.
+ContentForge AI demonstrates a production-inspired agentic workflow architecture.
+
+The system uses a shared LangGraph state machine where independent AI agents collaborate, validate outputs, recover from failures, and maintain full execution visibility through structured traces.
 
 Given one product JSON, the system produces:
 
 | Output File          | Description                                                            |
 |----------------------|------------------------------------------------------------------------|
 | product_page.json    | Structured product page using deterministic content blocks             |
-| faq.json             | ≥ 15 rule-based Q&A items derived solely from input facts              |
+| faq.json             | ≥ 15 validated Q&A items generated from grounded product facts             |
 | comparison_page.json | Product A vs. Fictional Product B comparison (ingredients, benefits, price, verdict) |
 
-The system is has the following features:
-✔ Modular agents
-✔ Deterministic behavior
-✔ No hallucinations
-✔ Strict JSON schemas
-✔ Clean orchestration using LangChain
-✔ LLM-repair and sanitization layers
-✔ Professional engineering-quality code
+Core capabilities:
+
+✔ LangGraph StateGraph orchestration  
+✔ Specialized multi-agent architecture  
+✔ Conditional agent routing  
+✔ Targeted self-correction loops  
+✔ Agent execution tracing  
+✔ Validation-driven regeneration  
+✔ Strict JSON schema enforcement  
+✔ Deterministic generation with LLM fallback  
+✔ Automated test coverage
+
+### 🧠 Self-Correcting Agentic Architecture
+
+The system uses LangGraph StateGraph to coordinate specialized agents through a shared PipelineState.
+
+Architecture flow:
+
+Input Product JSON
+        ↓
+Sanity Agent
+        ↓
+Facts Extractor Agent
+        ↓
+Generation Agents
+        ↓
+Validator Agent
+        ↓
+Conditional Router
+        ↓
+Pass → Renderer Agent
+
+Fail → Responsible Agent Retry
+
+
+Key capabilities:
+
+- State-based agent communication
+- Conditional routing decisions
+- Targeted failed-agent retries
+- Maximum retry protection
+- Execution trace logging
+- Validation feedback loops
+
+## 📊 Agent Execution Trace
+
+Every workflow execution produces an observable agent trace.
+
+Example:
+
+```text
+[SanityAgent]
+SUCCESS → Product schema validation completed
+
+[FactsExtractorAgent]
+SUCCESS → Product facts extracted
+
+[QuestionGeneratorAgent]
+SUCCESS → FAQ generated
+
+[ValidatorAgent]
+FAILED → FAQ validation failed
+
+[LangGraphRouter]
+RETRY → Routing retry to FAQAgent
+
+[ValidatorAgent]
+SUCCESS → Validation passed
+```
+This makes debugging, monitoring, and agent behavior analysis easier.
 
 ## 📦 Features
 ### 1. Multi-Agent Modular Architecture
@@ -34,33 +101,13 @@ The pipeline is divided into isolated agents:
 | **IngestAgent**                | Reads and normalizes the input product JSON                                    |
 | **SanityAgent**                | Validates schema correctness and detects data issues                            |
 | **FactsExtractorAgent**        | Converts the product into atomic, reusable factual units                        |
-| **FAQ Generator (LLM)**        | Builds FAQs using a fixed template with sanitization and validation             |
-| **Product Page Generator (LLM)** | Generates a structured product page using a strict JSON template              |
-| **ComparisonAgent (LLM + Rules)** | Builds a fictional Product B and performs structured A/B comparison          |
+| **FAQAgent (Hybrid Generator)**        | Builds FAQs using a fixed template with sanitization and validation             |
+| **ContentBlockAgent (Hybrid Generator)** | Generates a structured product page using a strict JSON template              |
+| **ComparisonAgent (Hybrid Reasoning)** | Builds a fictional Product B and performs structured A/B comparison          |
 | **RendererAgent**              | Writes all final JSON artifacts to disk                                         |
 
 
-### 🧠 Agentic Orchestration (UPDATED)
-
-The system now uses LangGraph (StateGraph) as the primary orchestration layer.
-
-What this enables:
-
-- Explicit state machine (PipelineState)
-
-- Node-level execution (sanity → facts → generation → validation → render)
-
-- Conditional routing
-
-- Validation loop with retry counter
-
-- Automatic regeneration when constraints fail
-
-- Hard stop after max retries to avoid infinite loops
-
-This replaces a simple sequential runner and satisfies agentic orchestration requirements.
-
-### 🔁 Deterministic-First with LLM Fallback (UPDATED)
+### 🔁 Hybrid Self-Correcting Generation Pipeline
 
 All generation nodes follow this pattern:
 
@@ -91,7 +138,7 @@ This ensures:
 | OpenAI GPT-4o-mini | JSON-locked fallback generation     |
 | Pydantic           | Schema validation                   |
 | python-dotenv      | Credential management               |
-| pytest             | Test suite                          |
+| Execution Trace Logger        | Agent observability and debugging                         |
 
 
 ### 🧠 Deterministic Content Guarantees
@@ -157,7 +204,7 @@ Verdict must be one of:
 
 ## 🗂 Project Structure
 ```bash
-kasparro-ai-agentic-content-generation-system-syed-daanyal/
+contentforge-ai-agent-system/
 │
 ├── run.py                     # Entry point (LangGraph-based pipeline)
 ├── requirements.txt
@@ -204,9 +251,7 @@ kasparro-ai-agentic-content-generation-system-syed-daanyal/
 │   ├── test_comparison.py
 │   ├── test_templates.py
 │   └── conftest.py
-│
-├── examples.zip               # Submission artifact
-└── src.zip                    # Submission artifact
+
 
 ```
 
@@ -227,8 +272,8 @@ Your input file must be a JSON file with product details, for example:
 ### 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/daanyal-23/kasparro-ai-agentic-content-generation-system-syed-daanyal
-cd kasparro-ai-agentic-content-generation-system-syed-daanyal
+git clone https://github.com/daanyal-23/contentforge-ai-agent-system
+cd contentforge-ai-agent-system
 ```
 
 ### 2️⃣ Create Virtual Environment
@@ -307,9 +352,9 @@ python -m pytest -q
 ```
 
 #### Expected output:
-
+```bash
 10 passed in X.XXs
-
+```
 ## 📝 Assumptions
 
 - Input follows the given product schema.
@@ -322,29 +367,22 @@ python -m pytest -q
 
 ## 🌱 Future Improvements
 
-- Graph-level node retries per agent
+- Persistent workflow memory
+- Batch product processing
+- Human approval checkpoints
+- FastAPI deployment layer
+- LangSmith observability integration
 
-- Metrics & tracing per node
+## 🏗 Engineering Highlights
 
-- Batch multi-product execution
+This project demonstrates:
 
-- Configurable comparison strategies
-
-- Optional explainability layer
-
-## 📤 Submission Notes for Evaluators
-
-This system demonstrates:
-
-- True agentic orchestration (LangGraph)
-
-- Deterministic-first engineering
-
-- Robust validation & retry logic
-
-- Clean separation of concerns
-
-- Production-quality structure
+- LangGraph-based agent orchestration
+- Feedback-driven self-correction
+- Observable agent execution
+- State-based workflow design
+- Production-style validation patterns
+- Modular and testable AI components
 
 ## 🙌 Final Notes
 
