@@ -32,6 +32,13 @@ Core capabilities:
 ✔ Deterministic generation with LLM fallback  
 ✔ Automated test coverage
 
+## ✅ Current Status
+
+- Test Suite: 10/10 passing
+- Agent Tracing: Enabled
+- Self-Correction Loop: Implemented
+- LangGraph Workflow: Active
+
 ### 🧠 Self-Correcting Agentic Architecture
 
 The system uses LangGraph StateGraph to coordinate specialized agents through a shared PipelineState.
@@ -127,18 +134,19 @@ This ensures:
 
 - Repair of malformed or incomplete results
 
-- Zero hallucinations
+- Reduced hallucination risk through fact-grounded generation and validation
 
 ### ⚙️ Technology Stack
-| Component          | Description                         |
-| ------------------ | ----------------------------------- |
-| Python 3.10+       | Core runtime                        |
-| **LangGraph**      | Agentic state-machine orchestration |
-| LangChain (v1.1.3) | Prompt + LLM abstraction            |
-| OpenAI GPT-4o-mini | JSON-locked fallback generation     |
-| Pydantic           | Schema validation                   |
-| python-dotenv      | Credential management               |
-| Execution Trace Logger        | Agent observability and debugging                         |
+| Component              | Description                         |
+| ---------------------- | ----------------------------------- |
+| Python 3.10+           | Core runtime                        |
+| **LangGraph**          | Agentic state-machine orchestration |
+| LangChain (v1.1.3)     | Prompt + LLM abstraction            |
+| OpenAI GPT-4o-mini     | JSON-locked fallback generation     |
+| Pydantic               | Schema validation                   |
+| python-dotenv          | Credential management               |
+| Execution Trace Logger | Agent observability and debugging   |
+| pytest                 | Test suite                          |
 
 
 ### 🧠 Deterministic Content Guarantees
@@ -228,7 +236,7 @@ contentforge-ai-agent-system/
 │   ├── state.py               # Typed PipelineState (shared state)
 │   ├── models.py              # ProductModel + schemas
 │   ├── langchain_orchestrator.py  # LLM fallback + JSON repair
-│   ├── orchestrator.py        # Legacy sequential pipeline (kept for reference)
+│   ├── orchestrator.py        # Sequential pipeline implementation
 │   ├── utils.py
 │   │
 │   └── agents/
@@ -298,7 +306,7 @@ OPENAI_API_KEY=your_key
 
 ### Generate all Outputs 
 ```bash
-python run.py --input examples/product.json
+python run.py --input examples/product_glowboost.json
 ```
 Outputs will appear in:
 ```bash
