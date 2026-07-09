@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 venv/
 out/
+*.zip
 .DS_Store
 Thumbs.db
 .cursor/
