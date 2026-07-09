@@ -2,6 +2,8 @@
 import logging
 from langgraph.graph import StateGraph, END
 
+from datetime import datetime,UTC
+
 from src.models import ProductModel
 from src.state import PipelineState
 
@@ -19,6 +21,23 @@ from src.langchain_orchestrator import (
 logger = logging.getLogger("LangGraphPipeline")
 logging.basicConfig(level=logging.INFO)
 
+def add_trace(
+    state: PipelineState,
+    agent: str,
+    status: str,
+    message: str,
+    metadata: dict = None,
+):
+    state.execution_trace.append(
+        {
+            "timestamp": datetime.now(UTC).isoformat(),
+            "agent": agent,
+            "status": status,
+            "message": message,
+            "metadata": metadata or {},
+        }
+    )
+
 # -----------------------------
 # Graph Nodes
 # -----------------------------
@@ -30,6 +49,17 @@ def sanity_node(state: PipelineState) -> PipelineState:
     # Store back as dict for LangGraph state
     state.product = product_model.to_dict()
     state.sanity_issues = issues
+
+    add_trace(
+        state,
+        "SanityAgent",
+        "SUCCESS",
+        "Product schema validation completed",
+        {
+            "issues_found": len(issues)
+        },
+    )
+
     return state
 
 
@@ -49,6 +79,16 @@ def facts_node(state: PipelineState) -> PipelineState:
     if not state.facts.get("price"):
         state.facts["price"] = {"amount": 0, "currency": "INR"}
     
+    add_trace(
+        state,
+        "FactsExtractorAgent",
+        "SUCCESS",
+        "Product facts extracted",
+        {
+            "fact_categories": list(state.facts.keys())
+        },
+    )
+
     return state
 
 
@@ -74,6 +114,16 @@ def product_page_node(state: PipelineState) -> PipelineState:
         # Fallback to LLM on error
         state.product_page = generate_product_page(state.facts)
     
+    add_trace(
+        state,
+        "ContentBlockAgent",
+        "SUCCESS",
+        "Product page generated",
+        {
+            "fallback_used": False
+        },
+    )
+
     return state
 
 
@@ -101,6 +151,16 @@ def faq_node(state: PipelineState) -> PipelineState:
         # Fallback to LLM on error
         state.faq = generate_faq(state.facts)
     
+    add_trace(
+        state,
+        "QuestionGeneratorAgent",
+        "SUCCESS",
+        "FAQ generated",
+        {
+            "faq_count": len(state.faq)
+        },
+    )
+
     return state
 
 
@@ -127,21 +187,61 @@ def comparison_node(state: PipelineState) -> PipelineState:
         # Fallback to LLM on error
         state.comparison = generate_comparison(state.facts)
     
+    add_trace(
+        state,
+        "ComparisonAgent",
+        "SUCCESS",
+        "Comparison content generated",
+    )
+
     return state
 
 
 def validate_node(state: PipelineState) -> PipelineState:
+
     state = validate_outputs(state)
+
+    add_trace(
+        state,
+        "ValidatorAgent",
+        (
+            "SUCCESS"
+            if state.is_valid
+            else "FAILED"
+        ),
+        (
+            "Validation passed"
+            if state.is_valid
+            else "Validation failed"
+        ),
+        {
+            "errors": state.errors,
+            "retry_count": state.retry_count,
+        },
+    )
+
     return state
 
 
 def render_node(state: PipelineState) -> PipelineState:
+
     write_outputs(
         product_page=state.product_page,
         faq=state.faq,
         comparison=state.comparison,
         outdir=state.outdir,
     )
+
+    add_trace(
+        state,
+        "RendererAgent",
+        "SUCCESS",
+        "Final JSON artifacts written",
+        {
+            "output_directory": state.outdir
+        },
+    )
+
     return state
 
 
@@ -156,6 +256,17 @@ def validation_router(state: PipelineState) -> str:
     # 🔁 Retry path
     if state.retry_count < state.max_retries:
         state.retry_count += 1
+
+        add_trace(
+            state,
+            "LangGraphRouter",
+            "RETRY",
+            "Validation failed. Routing back for regeneration.",
+            {
+                "attempt": state.retry_count,
+                "max_retries": state.max_retries,
+            },
+        )
 
         # Reset downstream artifacts before retry
         state.product_page = None

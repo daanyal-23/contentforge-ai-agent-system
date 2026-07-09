@@ -29,6 +29,9 @@ class PipelineState(BaseModel):
     retry_count: int = 0
     max_retries: int = 2
 
+    # Agent observability / execution logging
+    execution_trace: List[Dict[str, Any]] = Field(default_factory=list)
+
     # --------------------
     # IO
     # --------------------

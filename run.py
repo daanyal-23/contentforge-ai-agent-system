@@ -36,5 +36,20 @@ def main():
     print("Comparison Verdict:", result["comparison"].get("verdict"))
 
 
+    print("\n===== AGENT EXECUTION TRACE =====")
+
+    for index, event in enumerate(result["execution_trace"], start=1):
+        print(
+            f"{index}. "
+            f"[{event['agent']}] "
+            f"{event['status']} -> "
+            f"{event['message']}"
+        )
+
+        if event.get("metadata"):
+            print(
+                f"   metadata: {event['metadata']}"
+            )
+
 if __name__ == "__main__":
     main()

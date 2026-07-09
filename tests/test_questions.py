@@ -20,11 +20,14 @@ def test_generate_questions_count(facts):
 
 
 def test_generate_questions_categories(facts):
+
     qs = generate_questions(facts)
+
     cats = {q["category"] for q in qs}
-    assert "Informational" in cats
-    assert "Usage" in cats
-    assert "Safety" in cats
+
+    assert "Benefits" in cats
+    assert "Ingredients" in cats
+    assert "Pricing" in cats
 
 
 def test_generate_questions_ingredient_related(facts):
