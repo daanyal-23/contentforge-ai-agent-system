@@ -201,6 +201,10 @@ def validate_node(state: PipelineState) -> PipelineState:
 
     state = validate_outputs(state)
 
+    if not state.is_valid:
+        state.retry_count += 1
+
+
     add_trace(
         state,
         "ValidatorAgent",
@@ -217,6 +221,7 @@ def validate_node(state: PipelineState) -> PipelineState:
         {
             "errors": state.errors,
             "retry_count": state.retry_count,
+            "failed_agent": state.failed_agent,
         },
     )
 
@@ -249,36 +254,54 @@ def render_node(state: PipelineState) -> PipelineState:
 # Router
 # -----------------------------
 def validation_router(state: PipelineState) -> str:
-    # ✅ Success path
+
+
     if state.is_valid:
         return "render"
 
-    # 🔁 Retry path
-    if state.retry_count < state.max_retries:
-        state.retry_count += 1
+
+
+    if state.retry_count <= state.max_retries:
+
 
         add_trace(
             state,
             "LangGraphRouter",
             "RETRY",
-            "Validation failed. Routing back for regeneration.",
+            f"Routing retry to {state.failed_agent}",
             {
+                "failed_agent": state.failed_agent,
                 "attempt": state.retry_count,
-                "max_retries": state.max_retries,
             },
         )
 
-        # Reset downstream artifacts before retry
-        state.product_page = None
-        state.faq = None
-        state.comparison = None
-        state.is_valid = False
-        state.error = None
 
-        # Loop back to regeneration
-        return "product_page"
+        if state.failed_agent == "faq":
 
-    # ❌ Hard stop after retries
+            return "faq"
+
+
+        if state.failed_agent == "comparison":
+
+            return "comparison"
+
+
+        if state.failed_agent == "product_page":
+
+            return "product_page"
+
+
+
+    add_trace(
+        state,
+        "LangGraphRouter",
+        "STOP",
+        "Maximum retry attempts reached",
+        {
+            "attempts": state.retry_count
+        },
+    )
+
     return END
 
 
@@ -310,7 +333,9 @@ def build_graph():
         validation_router,
         {
             "render": "render",
-            "product_page": "product_page",  # ✅ REQUIRED FIX
+            "product_page": "product_page",
+            "faq": "faq",
+            "comparison": "comparison",
             END: END,
         },
     )

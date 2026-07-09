@@ -24,7 +24,9 @@ class PipelineState(BaseModel):
     is_valid: bool = False
     error: Optional[str] = None
     errors: List[str] = Field(default_factory=list)
-
+    # Failed agent tracking for targeted retries
+    failed_agent: Optional[str] = None
+    
     # 🔁 Retry control (KEY FIX)
     retry_count: int = 0
     max_retries: int = 2
