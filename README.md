@@ -149,7 +149,7 @@ This ensures:
 | pytest                 | Test suite                          |
 
 
-### 🧠 Deterministic Content Guarantees
+### 🛡 Output Reliability Guarantees
 
 - Same input → same output (timestamps excluded)
 
